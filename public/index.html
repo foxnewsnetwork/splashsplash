@@ -1,0 +1,115 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<script src="/socket.io.js"></script>
+		<script src="/javascripts/jquery.min.js"></script>
+		<script src="/bootstrap2/js/bootstrap.min.js"></script>
+		<link href="/bootstrap2/css/bootstrap.min.css" rel="stylesheet" media="all" />
+		<link href="/bootstrap2/css/bootstrap-responsive.min.css" rel="stylesheet" media="all" />
+		<link href="/jqui/css/start/jquery-ui-1.8.23.custom.css" rel=stylesheet" />
+		<script src="/jqui/js/jquery-ui-1.8.23.custom.min.js"></script>
+		<script type="text/javascript">
+		  var socket = io.connect('http://localhost:3123');
+		  var myicons = {};
+		  function initializeIcons() { 
+		  	for( id in myicons ) { 
+		  		var icon = myicons[id];
+		  		var div = "<img id='" + id + "'";
+		  		div += " style=\"position: absolute;";
+		  		div += " left: " + icon['x'] + "%; top: " + icon['y'] + "%;\"";
+		  		div += "src='" + icon['image'] + "' ></img>";
+		  		$("body").append( div );
+		  		$("#" + icon['_id']).draggable({
+		  			stop: function(e,ui) { 
+		  				var icon = { 
+		  					_id : $(this).attr("id") ,
+		  					x : 100 * e.pageX / window.innerWidth ,
+		  					y : 100 * e.pageY / window.innerHeight
+		  				} // icon
+		  				socket.emit( "project icon up", icon );
+		  			} // stop
+		  		}); // draggable
+		  		$("#" + icon['_id']).popover({
+		  			placement : ['top','bottom','left','right'][Math.floor((Math.random()*4)+1)] ,
+		  			title : "Info!" ,
+		  			content : icon['body'] + "<p><a href='" + icon['target'] + "' class='btn btn-primary'>Go!</a></p>"
+		  		}); // popover
+		  	}	 // for icons
+		  }  // processIcons
+		  
+		  socket.on('error down', function (data) {
+			console.log(data);
+			alert(data);
+		  });
+		  
+		  socket.on("project icons down", function(icons) { 
+		  	for( var k = 0; k < icons.length; k++ ) { 
+		  		var id = icons[k]['_id'];
+		  		myicons[ id ] = icons[k];
+		  	} // for k
+		  	initializeIcons();
+		  } ); // project icons down
+		  socket.on("project icon down", function(icon) { 
+		  	var id = icon['_id'];
+		  	myicons[id] = icon;
+		  } ); // project icon down
+		  $( function() { 
+		  	$("#turn-on-javascript").hide("explode");
+		  	$("#project_icon_form").submit( function() { 
+		  		var icon = { 
+		  			target : $("#target_text").val() ,
+		  			image : $("#image_link").val(),
+		  			body : escape( $("#hover_html").val() ) ,
+		  			x : 10 ,
+		  			y : 10 ,
+		  			width : 125 ,
+		  			height : 125
+		  		}; // icon
+		  		socket.emit( "project icon up", icon );
+		  		return false;
+		  	} ); // submit
+		  } ); // document ready
+		</script>
+	</head>
+	<body>
+		<div id="turn-on-javascript">
+			<h1>DOITFAGGOT, TURN ON JAVASCRIPT</h1>
+		</div>
+		<div id="debug:trace"></div>
+		<div class="modal hide fade" id="new-stuff-form" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+				<h3>New Doodad (Or leaving a note for me)?</h3>
+			</div>
+			<div class="modal-body">
+				<form class="form-horizontal" action="#" id="project_icon_form">
+					<div class="control-group">
+						<label for="target_text" class="control-label">Target</label>
+						<div class="controls">
+							<input type="text" id="target_text" placeholder="target link" />	
+						</div>
+					</div>
+					<div class="control-group">
+						<label for="target_text" class="control-label">Image</label>
+						<div class="controls">
+							<input type="text" id="image_link" placeholder="image url" />
+						</div>
+					</div>
+					<div class="control-group">
+						<label for="target_text" class="control-label">Text</label>
+						<div class="controls">
+							<textarea rows="6" id="hover_html" placeholder="text/html (but not javascript) here"></textarea>
+						</div>
+					</div>
+					<div class="form-actions">
+						<button id="confirm" class="btn btn-large btn-danger">Save</button>			
+					</div>
+				</form>
+			</div>
+		</div>
+		<button style="right: 1%; bottom: 1%; position: absolute;" class="btn btn-info btn-mini" href="#new-stuff-form" data-toggle="modal">
+			<i class="icon-pencil icon-white"></i>
+		</button>
+	</body>
+</html>
+	
